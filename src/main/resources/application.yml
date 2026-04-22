@@ -1,0 +1,26 @@
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/gupet}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+  redis:
+    host: ${SPRING_REDIS_HOST:localhost}
+    port: 6379
+
+# ==================== JWT CONFIG ====================
+jwt:
+  secret: gupet-super-secret-key-2026-very-long-and-secure-key-minimum-64-characters-for-hmac
+  access:
+    expiration: 900000          # 15 phút (900000 ms)
+  refresh:
+    expiration: 604800000       # 7 ngày (604800000 ms)
+
+# CORS (tùy chọn nhưng nên có)
+cors:
+  allowed-origin: http://localhost:4200
