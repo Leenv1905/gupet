@@ -1,26 +1,52 @@
 spring:
+  application:
+    name: gupet
+
+  # ====================== MYSQL (XAMPP) ======================
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/gupet}
-    username: ${SPRING_DATASOURCE_USERNAME:postgres}
-    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    url: jdbc:mysql://localhost:3306/gupet?useSSL=false&serverTimezone=Asia/Ho_Chi_Minh&allowPublicKeyRetrieval=true
+    username: root
+    password: ""                       # Nếu có password thì điền vào đây
+    driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
+    # Không cần chỉ định dialect, để Spring Boot tự detect
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+#        dialect: org.hibernate.dialect.MySQL8Dialect
 
+  # ====================== REDIS ======================
   redis:
-    host: ${SPRING_REDIS_HOST:localhost}
+    host: localhost
     port: 6379
 
-# ==================== JWT CONFIG ====================
+
+# ====================== FILE UPLOAD ======================
+app:
+  upload:
+    dir: uploads   # Thư mục lưu ảnh
+
+# ====================== JWT CONFIG (PHẢI CÓ PHẦN NÀY) ======================
 jwt:
   secret: gupet-super-secret-key-2026-very-long-and-secure-key-minimum-64-characters-for-hmac
   access:
-    expiration: 900000          # 15 phút (900000 ms)
+    expiration: 900000          # 15 phút
   refresh:
-    expiration: 604800000       # 7 ngày (604800000 ms)
+    expiration: 604800000       # 7 ngày
 
-# CORS (tùy chọn nhưng nên có)
-cors:
-  allowed-origin: http://localhost:4200
+# ====================== Swagger ======================
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    try-it-out-enabled: true
+  api-docs:
+    enabled: true
+
+logging:
+  level:
+    org.hibernate.orm.jdbc.bind: TRACE
