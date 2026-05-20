@@ -30,6 +30,7 @@ spring:
 app:
   upload:
     dir: uploads   # Thư mục lưu ảnh
+#  base-url: http://localhost:8080   # ← Địa chỉ backend trả veef cho frontend
 
 # ====================== JWT CONFIG (PHẢI CÓ PHẦN NÀY) ======================
 jwt:

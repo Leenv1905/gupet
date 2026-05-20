@@ -11,12 +11,15 @@ import com.ecom.gupet.common.service.FileStorageService;
 import com.ecom.gupet.modules.user.entity.User;
 import com.ecom.gupet.modules.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PetService {
@@ -46,12 +49,31 @@ public class PetService {
         }
 
         // Upload ảnh nếu có
-        List<String> imageUrls = fileStorageService.uploadMultiple(images);
-        request.setImageUrls(imageUrls);
+//        List<String> imageUrls = fileStorageService.uploadMultiple(images);
+//        request.setImageUrls(imageUrls);
 
         // Tạo Pet
         Pet pet = petMapper.toEntity(request);
         pet.setSeller(seller);
+
+// Upload và add ảnh vào pet TRƯỚC khi save
+//        if (images != null && images.length > 0) {
+//            List<String> imageUrls = fileStorageService.uploadMultiple(images);
+//            for (int i = 0; i < imageUrls.size(); i++) {
+//                PetImage img = PetImage.builder()
+//                        .imageUrl(imageUrls.get(i))
+//                        .displayOrder(i)
+//                        .build();
+//                pet.addImage(img); // addImage sẽ set pet reference
+//            }
+//        }
+        if (images != null && images.length > 0) {
+            List<PetImage> petImages = fileStorageService.uploadPetImagesWithThumbnails(images);
+
+            for (PetImage img : petImages) {
+                pet.addImage(img);        // quan trọng: addImage sẽ set pet reference
+            }
+        }
 
         Pet savedPet = petRepository.save(pet);
 
@@ -109,22 +131,68 @@ public PetResponse updatePet(Long id, PetRequest request, Long sellerId, Multipa
         System.out.println("⚠️ PetChipCode bị thay đổi → giữ nguyên cũ");
     }
 
-    // Xử lý ảnh mới (nếu có)
+//    // Xử lý ảnh mới (nếu có)
+//    if (images != null && images.length > 0) {
+//        List<String> newImageUrls = fileStorageService.uploadMultiple(images);
+//        // Xóa ảnh cũ nếu muốn (tùy bạn)
+//        // pet.getImages().clear();
+//        for (int i = 0; i < newImageUrls.size(); i++) {
+//            PetImage img = PetImage.builder()
+//                    .pet(pet)
+//                    .imageUrl(newImageUrls.get(i))
+//                    .displayOrder(i)
+//                    .build();
+//            pet.addImage(img);
+//        }
+//    }
+//  updatePet
+// ==================== XỬ LÝ ẢNH KHI UPDATE ====================
     if (images != null && images.length > 0) {
-        List<String> newImageUrls = fileStorageService.uploadMultiple(images);
-        // Xóa ảnh cũ nếu muốn (tùy bạn)
-        // pet.getImages().clear();
-        for (int i = 0; i < newImageUrls.size(); i++) {
-            PetImage img = PetImage.builder()
-                    .pet(pet)
-                    .imageUrl(newImageUrls.get(i))
-                    .displayOrder(i)
-                    .build();
+        // Có upload ảnh mới → xóa ảnh cũ và thay bằng ảnh mới
+        log.info("Đang thay thế ảnh cho pet ID: {}", id);
+
+        // Xóa file vật lý cũ
+        for (PetImage oldImage : new ArrayList<>(pet.getImages())) {
+            try {
+                fileStorageService.deleteFile(oldImage.getImageUrl());
+                if (oldImage.getThumbnailUrl() != null) {
+                    fileStorageService.deleteFile(oldImage.getThumbnailUrl());
+                }
+            } catch (Exception e) {
+                log.warn("Không xóa được file cũ: {}", oldImage.getImageUrl(), e);
+            }
+        }
+
+        // Xóa record ảnh cũ trong DB
+        pet.getImages().clear();
+
+        // Upload ảnh mới
+        List<PetImage> newImages = fileStorageService.uploadPetImagesWithThumbnails(images);
+        for (PetImage img : newImages) {
             pet.addImage(img);
         }
     }
+// else: Không upload ảnh mới → giữ nguyên ảnh cũ (không làm gì cả)
+    // Xử lý ảnh mới
+//    if (images != null && images.length > 0) {
+//        List<String> newImageUrls = fileStorageService.uploadMultiple(images);
+//
+//        // Xóa ảnh cũ trước (orphanRemoval = true sẽ DELETE chúng khỏi DB)
+//        pet.getImages().clear();
+//
+//        for (int i = 0; i < newImageUrls.size(); i++) {
+//            PetImage img = PetImage.builder()
+//                    .imageUrl(newImageUrls.get(i))
+//                    .displayOrder(i)
+//                    .build();
+//            pet.addImage(img); // set pet reference trong addImage
+//        }
+//    }
 
-    Pet savedPet = petRepository.save(pet);
+//    Pet savedPet = petRepository.save(pet);
+
+    Pet savedPet = petRepository.saveAndFlush(pet);
+
     System.out.println("✅ Pet updated successfully. New name: " + savedPet.getName());
 
     return petMapper.toResponse(savedPet);
