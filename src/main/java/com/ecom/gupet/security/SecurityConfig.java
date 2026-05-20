@@ -37,6 +37,7 @@ public class SecurityConfig {
                         // ====================== USER APIs (Tất cả user đã login) ======================
                         .requestMatchers("/api/user/profile",
                                 "/api/user/change-password",
+                                "/pet/cart/**",
                                 "/api/user/{userId}").authenticated()   // Xem & sửa thông tin cá nhân
 
                         // ====================== ADMIN APIs (Chỉ ADMIN) ======================

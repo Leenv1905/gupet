@@ -1,5 +1,6 @@
 package com.ecom.gupet.modules.user.service;
 
+import com.ecom.gupet.common.util.SecurityUtils;
 import com.ecom.gupet.modules.user.dto.*;
 import com.ecom.gupet.modules.user.entity.Role;
 import com.ecom.gupet.modules.user.entity.User;
@@ -210,5 +211,16 @@ public class UserService {
                 .birthday(user.getBirthday())
                 .roles(user.getRoles().stream().map(Role::getName).toList())
                 .build();
+    }
+    // ==================== LẤY USER HIỆN TẠI TỪ JWT ====================
+    public User getCurrentUser() {
+        String email = SecurityUtils.getCurrentUserEmail();   // Giả sử bạn đang dùng SecurityUtils như trước
+
+        if (email == null) {
+            throw new RuntimeException("Unauthorized - No user logged in");
+        }
+
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
     }
 }
