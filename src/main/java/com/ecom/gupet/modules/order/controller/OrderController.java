@@ -145,7 +145,8 @@ public class OrderController {
     // =========================================================================
 
     @GetMapping("/admin/by-status")
-    @PreAuthorize("hasRole('ADMIN')")
+//    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     @Operation(summary = "ADMIN — Lọc đơn hàng theo trạng thái")
     public ResponseEntity<List<OrderSummaryResponse>> getByStatus(
             @RequestParam OrderStatus status) {
