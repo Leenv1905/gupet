@@ -3,6 +3,8 @@ package com.ecom.gupet.modules.order.controller;
 import com.ecom.gupet.modules.order.dto.*;
 import com.ecom.gupet.modules.order.entity.OrderStatus;
 import com.ecom.gupet.modules.order.service.OrderService;
+import com.ecom.gupet.modules.order.service.OrderEventService;
+import com.ecom.gupet.modules.order.dto.OrderEventResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -21,6 +23,7 @@ import java.util.List;
 public class OrderController {
 
     private final OrderService orderService;
+    private final OrderEventService orderEventService;
 
     // =========================================================================
     // USER — ĐẶT HÀNG VÀ THEO DÕI ĐƠN
@@ -151,5 +154,16 @@ public class OrderController {
     public ResponseEntity<List<OrderSummaryResponse>> getByStatus(
             @RequestParam OrderStatus status) {
         return ResponseEntity.ok(orderService.getOrdersByStatus(status));
+    }
+
+    /**
+     * GET /api/orders/{orderId}/events
+     * Lấy toàn bộ event history — buyer, seller, operator, admin đều dùng.
+     * Dùng để render timeline chính xác trên frontend.
+     */
+    @GetMapping("/{orderId}/events")
+    @Operation(summary = "Lấy lịch sử sự kiện của đơn hàng (timeline)")
+    public ResponseEntity<List<OrderEventResponse>> getOrderEvents(@PathVariable Long orderId) {
+        return ResponseEntity.ok(orderEventService.getEventsByOrderId(orderId));
     }
 }
